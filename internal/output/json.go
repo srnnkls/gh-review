@@ -28,6 +28,10 @@ func (f *jsonFormatter) Format(result Result) error {
 		v = f.formatSubmit(r)
 	case DiscardResult:
 		v = f.formatDiscard(r)
+	case ReplyResult:
+		v = f.formatReply(r)
+	case ResolveResult:
+		v = f.formatResolve(r)
 	case NoOpResult:
 		v = f.formatNoOp(r)
 	default:
@@ -102,11 +106,11 @@ type jsonViewResult struct {
 }
 
 type jsonViewThread struct {
-	ID       string               `json:"id,omitempty"`
-	Path     string               `json:"path"`
-	Line     int                  `json:"line,omitempty"`
-	Resolved bool                 `json:"resolved"`
-	Comments []jsonViewComment    `json:"comments"`
+	ID       string            `json:"id,omitempty"`
+	Path     string            `json:"path"`
+	Line     int               `json:"line,omitempty"`
+	Resolved bool              `json:"resolved"`
+	Comments []jsonViewComment `json:"comments"`
 }
 
 type jsonViewComment struct {
@@ -206,6 +210,36 @@ func (f *jsonFormatter) formatDiscard(r DiscardResult) jsonDiscardResult {
 	return jsonDiscardResult{
 		Action:   "discarded",
 		ReviewID: r.ReviewID,
+	}
+}
+
+type jsonReplyResult struct {
+	Action    string `json:"action"`
+	ThreadID  string `json:"thread_id"`
+	CommentID string `json:"comment_id,omitempty"`
+	URL       string `json:"url,omitempty"`
+}
+
+func (f *jsonFormatter) formatReply(r ReplyResult) jsonReplyResult {
+	return jsonReplyResult{
+		Action:    "replied",
+		ThreadID:  r.ThreadID,
+		CommentID: r.CommentID,
+		URL:       r.URL,
+	}
+}
+
+type jsonResolveResult struct {
+	Action   string `json:"action"`
+	ThreadID string `json:"thread_id"`
+	Resolved bool   `json:"resolved"`
+}
+
+func (f *jsonFormatter) formatResolve(r ResolveResult) jsonResolveResult {
+	return jsonResolveResult{
+		Action:   "resolved",
+		ThreadID: r.ThreadID,
+		Resolved: r.Resolved,
 	}
 }
 

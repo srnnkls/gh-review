@@ -44,11 +44,11 @@ type CommentsResult struct {
 func (r CommentsResult) Type() string { return "comments" }
 
 type ViewThread struct {
-	ID         string
-	Path       string
-	Line       int
-	Resolved   bool
-	Comments   []ViewThreadComment
+	ID       string
+	Path     string
+	Line     int
+	Resolved bool
+	Comments []ViewThreadComment
 }
 
 type ViewThreadComment struct {
@@ -95,6 +95,21 @@ type DiscardResult struct {
 }
 
 func (r DiscardResult) Type() string { return "discard" }
+
+type ReplyResult struct {
+	ThreadID  string
+	CommentID string
+	URL       string
+}
+
+func (r ReplyResult) Type() string { return "reply" }
+
+type ResolveResult struct {
+	ThreadID string
+	Resolved bool
+}
+
+func (r ResolveResult) Type() string { return "resolve" }
 
 type NoOpResult struct {
 	Message string

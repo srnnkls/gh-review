@@ -40,6 +40,8 @@ gh review submit 123 -v approve -b "LGTM!"
 | `comments` | List PR comments with filtering |
 | `edit` | Edit an existing draft comment |
 | `delete` | Delete a draft comment |
+| `reply` | Reply to an existing review thread |
+| `resolve` | Mark a review thread as resolved |
 | `submit` | Submit pending review with verdict |
 | `discard` | Discard pending review entirely |
 
@@ -168,6 +170,45 @@ gh review delete <pr> -c <comment-id>
 
 ```bash
 gh review delete 123 -c PRRC_kwDOABC123
+```
+
+### reply
+
+Post a reply to an existing review thread. Identify the thread by a comment ID
+from `comments --ids` (`-c`) or by its thread node ID (`--thread`); `--thread`
+wins when both are given.
+
+```bash
+gh review reply <pr> -c <comment-id> -b <body>
+gh review reply <pr> --thread <thread-id> -b <body>
+
+-c, --comment <id>    Comment node ID to reply under (from `comments --ids`)
+    --thread <id>     Thread node ID to reply to
+-b, --body <text>     Reply body (required)
+```
+
+**Example:**
+
+```bash
+gh review reply 123 -c PRRC_kwDOABC123 -b "Done in abc1234 — added the guard"
+```
+
+### resolve
+
+Mark a review thread as resolved. Identify the thread the same way as `reply`.
+
+```bash
+gh review resolve <pr> -c <comment-id>
+gh review resolve <pr> --thread <thread-id>
+
+-c, --comment <id>    Comment node ID whose thread to resolve (from `comments --ids`)
+    --thread <id>     Thread node ID to resolve
+```
+
+**Example:**
+
+```bash
+gh review resolve 123 -c PRRC_kwDOABC123
 ```
 
 ### submit

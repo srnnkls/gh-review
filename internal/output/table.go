@@ -64,6 +64,10 @@ func (f *tableFormatter) Format(result Result) error {
 		return f.formatSubmit(r)
 	case DiscardResult:
 		return f.formatDiscard(r)
+	case ReplyResult:
+		return f.formatReply(r)
+	case ResolveResult:
+		return f.formatResolve(r)
 	case NoOpResult:
 		return f.formatNoOp(r)
 	default:
@@ -235,6 +239,35 @@ func (f *tableFormatter) formatSubmit(r SubmitResult) error {
 
 func (f *tableFormatter) formatDiscard(r DiscardResult) error {
 	msg := fmt.Sprintf("✓ Discarded pending review %s", r.ReviewID)
+	if f.isTTY {
+		msg = successStyle.Render(msg)
+	}
+	fmt.Fprintln(f.w, msg)
+	return nil
+}
+
+func (f *tableFormatter) formatReply(r ReplyResult) error {
+	msg := fmt.Sprintf("✓ Replied to thread %s", r.ThreadID)
+	if f.isTTY {
+		msg = successStyle.Render(msg)
+	}
+	fmt.Fprintln(f.w, msg)
+	if r.URL != "" {
+		url := r.URL
+		if f.isTTY {
+			url = dimStyle.Render(url)
+		}
+		fmt.Fprintln(f.w, url)
+	}
+	return nil
+}
+
+func (f *tableFormatter) formatResolve(r ResolveResult) error {
+	verb := "Resolved"
+	if !r.Resolved {
+		verb = "Unresolved"
+	}
+	msg := fmt.Sprintf("✓ %s thread %s", verb, r.ThreadID)
 	if f.isTTY {
 		msg = successStyle.Render(msg)
 	}

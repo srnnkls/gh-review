@@ -203,7 +203,7 @@ func (c *Client) UpdateComment(input UpdateCommentInput) error {
 	variables := map[string]interface{}{
 		"input": map[string]interface{}{
 			"pullRequestReviewCommentId": commentID,
-			"body":                        body,
+			"body":                       body,
 		},
 	}
 
@@ -345,4 +345,116 @@ func (c *Client) DeleteReview(reviewID string) error {
 	}
 
 	return nil
+}
+
+type ReplyThreadInput struct {
+	ThreadID string
+	Body     string
+}
+
+type ReplyThreadResult struct {
+	ID  string
+	URL string
+}
+
+func (c *Client) ReplyThread(input ReplyThreadInput) (*ReplyThreadResult, error) {
+	threadID := strings.TrimSpace(input.ThreadID)
+	if threadID == "" {
+		return nil, fmt.Errorf("thread ID required")
+	}
+	if !strings.HasPrefix(threadID, "PRRT_") {
+		return nil, fmt.Errorf("invalid thread ID %q: expected GraphQL thread node ID", threadID)
+	}
+
+	body := strings.TrimSpace(input.Body)
+	if body == "" {
+		return nil, fmt.Errorf("body required")
+	}
+
+	const mutation = `mutation ReplyThread($input: AddPullRequestReviewThreadReplyInput!) {
+  addPullRequestReviewThreadReply(input: $input) {
+    comment {
+      id
+      url
+    }
+  }
+}`
+
+	variables := map[string]interface{}{
+		"input": map[string]interface{}{
+			"pullRequestReviewThreadId": threadID,
+			"body":                      body,
+		},
+	}
+
+	var response struct {
+		AddPullRequestReviewThreadReply struct {
+			Comment struct {
+				ID  string `json:"id"`
+				URL string `json:"url"`
+			} `json:"comment"`
+		} `json:"addPullRequestReviewThreadReply"`
+	}
+
+	if err := c.gql.Do(mutation, variables, &response); err != nil {
+		return nil, fmt.Errorf("reply to thread: %w", err)
+	}
+
+	id := strings.TrimSpace(response.AddPullRequestReviewThreadReply.Comment.ID)
+	if id == "" {
+		return nil, fmt.Errorf("reply returned empty comment ID")
+	}
+
+	return &ReplyThreadResult{
+		ID:  id,
+		URL: response.AddPullRequestReviewThreadReply.Comment.URL,
+	}, nil
+}
+
+type ResolveThreadResult struct {
+	ThreadID   string
+	IsResolved bool
+}
+
+func (c *Client) ResolveThread(threadID string) (*ResolveThreadResult, error) {
+	threadID = strings.TrimSpace(threadID)
+	if threadID == "" {
+		return nil, fmt.Errorf("thread ID required")
+	}
+	if !strings.HasPrefix(threadID, "PRRT_") {
+		return nil, fmt.Errorf("invalid thread ID %q: expected GraphQL thread node ID", threadID)
+	}
+
+	const mutation = `mutation ResolveThread($input: ResolveReviewThreadInput!) {
+  resolveReviewThread(input: $input) {
+    thread {
+      id
+      isResolved
+    }
+  }
+}`
+
+	variables := map[string]interface{}{
+		"input": map[string]interface{}{
+			"threadId": threadID,
+		},
+	}
+
+	var response struct {
+		ResolveReviewThread struct {
+			Thread struct {
+				ID         string `json:"id"`
+				IsResolved bool   `json:"isResolved"`
+			} `json:"thread"`
+		} `json:"resolveReviewThread"`
+	}
+
+	if err := c.gql.Do(mutation, variables, &response); err != nil {
+		return nil, fmt.Errorf("resolve thread: %w", err)
+	}
+
+	return &ResolveThreadResult{
+		ThreadID:   strings.TrimSpace(response.ResolveReviewThread.Thread.ID),
+		IsResolved: response.ResolveReviewThread.Thread.IsResolved,
+	}, nil
 }

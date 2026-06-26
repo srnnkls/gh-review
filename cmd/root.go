@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/srnnkls/gh-review/internal/api"
@@ -59,4 +61,17 @@ func resolvePR(arg string) (*api.PRRef, error) {
 	}
 
 	return api.NewPRRef(number, repo)
+}
+
+func resolveThreadID(client *api.Client, pr *api.PRRef, thread, comment string) (string, error) {
+	thread = strings.TrimSpace(thread)
+	comment = strings.TrimSpace(comment)
+
+	if thread != "" {
+		return thread, nil
+	}
+	if comment != "" {
+		return client.ThreadIDByComment(pr, comment)
+	}
+	return "", fmt.Errorf("one of --thread or --comment is required")
 }

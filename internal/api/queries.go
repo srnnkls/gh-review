@@ -597,3 +597,27 @@ func (c *Client) ReviewThreads(pr *PRRef, opts ReviewThreadsOptions) (*ThreadsRe
 
 	return result, nil
 }
+
+// ThreadIDByComment finds the review thread node ID containing the given
+// comment node ID (head or reply). Returns an error if no thread matches.
+func (c *Client) ThreadIDByComment(pr *PRRef, commentID string) (string, error) {
+	commentID = strings.TrimSpace(commentID)
+	if commentID == "" {
+		return "", fmt.Errorf("comment ID required")
+	}
+
+	threads, err := c.ReviewThreads(pr, ReviewThreadsOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	for _, thread := range threads.Threads {
+		for _, cmt := range thread.Comments {
+			if cmt.ID == commentID {
+				return thread.ID, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no review thread found for comment %s on %s", commentID, pr)
+}

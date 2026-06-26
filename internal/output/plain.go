@@ -26,6 +26,10 @@ func (f *plainFormatter) Format(result Result) error {
 		return f.formatSubmit(r)
 	case DiscardResult:
 		return f.formatDiscard(r)
+	case ReplyResult:
+		return f.formatReply(r)
+	case ResolveResult:
+		return f.formatResolve(r)
 	case NoOpResult:
 		return f.formatNoOp(r)
 	default:
@@ -117,6 +121,20 @@ func (f *plainFormatter) formatSubmit(r SubmitResult) error {
 
 func (f *plainFormatter) formatDiscard(r DiscardResult) error {
 	fmt.Fprintf(f.w, "discarded\t%s\n", r.ReviewID)
+	return nil
+}
+
+func (f *plainFormatter) formatReply(r ReplyResult) error {
+	fmt.Fprintf(f.w, "replied\t%s\t%s\n", r.ThreadID, r.URL)
+	return nil
+}
+
+func (f *plainFormatter) formatResolve(r ResolveResult) error {
+	status := "resolved"
+	if !r.Resolved {
+		status = "unresolved"
+	}
+	fmt.Fprintf(f.w, "%s\t%s\n", status, r.ThreadID)
 	return nil
 }
 
